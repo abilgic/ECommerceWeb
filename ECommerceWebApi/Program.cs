@@ -1,4 +1,5 @@
 using ECommerceWebApi.DataAccess;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +16,10 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
     //options.UseLazyLoadingProxies();
 }
 );
-
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
