@@ -22,16 +22,17 @@ namespace ECommerceWebApi.Controllers
         }
         [HttpPost("merchant/application")]
         [ProducesResponseType(200,Type=typeof(ApplicationAccountResponseModel))]
-        //[ProducesResponseType(400, Type = typeof(List<string>))]
+        [ProducesResponseType(400, Type = typeof(Resp<ApplicationAccountResponseModel>))]
         public IActionResult Application([FromBody] ApplicationAccountRequestModel model)
         {
+            Resp<ApplicationAccountResponseModel> response = new Resp<ApplicationAccountResponseModel>();
             //if (ModelState.IsValid)
             //{
-                model.Username = model.Username.Trim().ToLower();
+            model.Username = model.Username.Trim().ToLower();
                 if (_context.Accounts.Any(x => x.Username.ToLower() == model.Username)) 
                 {
-                    ModelState.AddModelError(nameof(model.Username), "Kullanıcı adı kullanılmaktadır.");
-                    return BadRequest(ModelState);
+                    response.AddError(nameof(model.Username), "Kullanıcı adı kullanılmaktadır.");
+                    return BadRequest(response);
                 }
                 else
                 {
@@ -50,7 +51,7 @@ namespace ECommerceWebApi.Controllers
                     _context.Accounts.Add(account);
                     _context.SaveChanges();
 
-                    ApplicationAccountResponseModel response = new ApplicationAccountResponseModel
+                    ApplicationAccountResponseModel applicationAccountResponseModel = new ApplicationAccountResponseModel
                     {
                         Id = account.Id,
                         Username = account.Username,
@@ -58,7 +59,9 @@ namespace ECommerceWebApi.Controllers
                         CompanyName = account.CompanyName,
                         ContactEmail =account.ContactEmail,
                     };
-                    account.Password = null;
+
+                
+                response.Data = applicationAccountResponseModel;
                     return Ok(response);
 
                 }
@@ -66,6 +69,21 @@ namespace ECommerceWebApi.Controllers
             //}
             //List<string> errors = ModelState.Values.SelectMany(x => x.Errors.Select(y => y.ErrorMessage)).ToList();
             //return BadRequest(errors);
+        }
+
+        public class Resp<T>
+        {
+            public Dictionary<string, string[]> Errors { get; private set; }
+            public T Data { get; set; }
+
+            public void AddError(string key, params string[] errors)
+            {
+                if (Errors == null)
+                    Errors = new Dictionary<string, string[]>();
+
+                Errors.Add(key, errors);
+            }
+
         }
     }
 }
