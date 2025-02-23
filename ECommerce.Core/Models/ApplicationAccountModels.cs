@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ECommerceWebApi.Models
+namespace ECommerce.Core.Models
 {
     public class ApplicationAccountRequestModel
     {
