@@ -3,6 +3,7 @@ using ECommerce.Core.Models;
 using ECommerceWebApi.DataAccess;
 using ECommerceWebApi.Entities;
 using ECommerceWebApi.myServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,12 +11,14 @@ using System.Security.Claims;
 using System.Text;
 using static ECommerce.Core.AccountController;
 using static ECommerceWebApi.Controllers.AccountController;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ECommerceWebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public partial class AccountController : ControllerBase
+    [Authorize(Roles ="Admin")]
+    public class AccountController : ControllerBase
     {
         //Application logic: Satıcı Başvurusu
         //Register: Üye kaydı
@@ -119,6 +122,7 @@ namespace ECommerceWebApi.Controllers
 
         }
 
+        [AllowAnonymous]
         [HttpPost("authenticate")]
         [ProducesResponseType(200, Type = typeof(Resp<AuthenticateResponseModel>))]
         [ProducesResponseType(400, Type = typeof(Resp<AuthenticateResponseModel>))]
@@ -139,7 +143,7 @@ namespace ECommerceWebApi.Controllers
                     string key = _configuration["JwtOptions:Key"];
                     List<Claim> claims = new List<Claim>
                                     {
-                                        new Claim("id", account.Id.ToString()),
+                                        new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
                                         new Claim(ClaimTypes.Name, account.Username),
                                         new Claim("type", account.Type.ToString()),
                                         new Claim(ClaimTypes.Role, account.Type.ToString())

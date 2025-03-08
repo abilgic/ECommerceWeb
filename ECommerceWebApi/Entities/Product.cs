@@ -17,6 +17,7 @@ namespace ECommerceWebApi.Entities
         public decimal DiscountedPrice { get; set; }
         public bool Discontinued{ get; set; }
         public int CategoryId { get; set; }
+        public int AccountId { get; set; }
         public virtual Category Category { get; set; }
         public virtual Account Account { get; set; }
 

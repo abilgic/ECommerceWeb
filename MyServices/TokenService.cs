@@ -7,7 +7,7 @@ namespace ECommerceWebApi.myServices
 {
     public static class TokenService
     {
-        public static string GenerateToken(string jwtKey, DateTime expires, IEnumerable<Claim> claims, string issuer = "http://localhost:5000", string audience = "http://localhost:5000")
+        public static string GenerateToken(string jwtKey, DateTime expires, IEnumerable<Claim> claims, string issuer = "http://localhost:5024", string audience = "ECommerceWebApi")
         {
             byte[] key = Encoding.UTF8.GetBytes(jwtKey);
             SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
