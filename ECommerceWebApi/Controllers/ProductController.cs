@@ -2,6 +2,7 @@
 using ECommerceWebApi.DataAccess;
 using ECommerceWebApi.Entities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -183,30 +184,59 @@ namespace ECommerceWebApi.Controllers
         }
 
         [HttpPut("update/{id}")]
-        [ProducesResponseType(200, Type = typeof(Resp<CategoryModel>))]
-        [ProducesResponseType(400, Type = typeof(Resp<CategoryModel>))]
-        [ProducesResponseType(404, Type = typeof(Resp<CategoryModel>))]
-        public IActionResult Uptade([FromRoute] int id, [FromBody] CategoryUpdateModel model)
+        [ProducesResponseType(200, Type = typeof(Resp<ProductModel>))]
+        [ProducesResponseType(400, Type = typeof(Resp<ProductModel>))]
+        [ProducesResponseType(404, Type = typeof(Resp<ProductModel>))]
+        public IActionResult Uptade([FromRoute] int id, [FromBody] ProductUpdateModel model)
         {
-            Resp<CategoryModel> response = new Resp<CategoryModel>();
-            Category category = _context.Categories.Find(id);
+            Resp<ProductModel> response = new Resp<ProductModel>();
 
-            if (category == null)
+            //int accountId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c =>
+            //c.Type == ClaimTypes.NameIdentifier)?.Value ?? "0");
+            string role = HttpContext.User.FindFirst(ClaimTypes.Role).Value;
+            int accountId = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            Product product = _context.Products.SingleOrDefault(x=>x.Id==id && (role == "Admin"|| (role != "Admin" && x.AccountId==accountId)));
+            
+
+            if (product == null)
             {
                 return NotFound(response);
             }
 
-            string categoryName = model.Name?.Trim().ToLower();
-            if (_context.Categories.Any(x => x.Name.ToLower() == categoryName && x.Id != id))
+            string productName = model.Name?.Trim().ToLower();
+            if (_context.Products.Any(x => x.Name.ToLower() == productName && x.Id != id && (role == "Admin" || (role != "Admin" && x.AccountId == accountId))))
             {
-                response.AddError(nameof(model.Name), "Bu kategory adı zaten mevcuttur.");
+                response.AddError(nameof(model.Name), "Bu ürün adı zaten mevcuttur.");
                 return BadRequest(response);
             }
-            category.Name = model.Name;
-            category.Description = model.Description;
+            bool categoryExists = _context.Categories.Any(c => c.Id == model.CategoryId);
+            if (!categoryExists)
+            {
+                response.AddError(nameof(model.CategoryId), "The specified category does not exist.");
+                return BadRequest(response);
+            }
+            product.Name = model.Name;
+            product.Description = model.Description;
+            product.UnitPrice = model.UnitPrice;
+            product.DiscountedPrice = model.DiscountedPrice;
+            product.Discontinued = model.Discontinued;
+            product.CategoryId = model.CategoryId;
             _context.SaveChanges();
 
-            CategoryModel data = new CategoryModel { Id = category.Id, Description = category.Description, Name = category.Name };
+            product = _context.Products.Include(x => x.Category).Include(x => x.Account).SingleOrDefault(x => x.Id == product.Id);
+
+            ProductModel data = new ProductModel
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                UnitPrice = product.UnitPrice,
+                Discontinued = product.Discontinued,
+                CategoryId = product.CategoryId,
+                AccountId = product.AccountId,
+                CategoryName = product.Category.Name,
+                AccountCompanyName = product.Account.CompanyName
+            };
 
             response.Data = data;
             return Ok(response);
